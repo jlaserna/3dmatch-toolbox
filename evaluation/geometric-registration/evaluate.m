@@ -4,7 +4,9 @@
 % http://redwood-data.org/indoor/regbasic.html
 % https://github.com/qianyizh/ElasticReconstruction/tree/master/Matlab_Toolbox
 
-descriptorsNames = {'CliReg', 'CliRegMutual', 'Teaser', 'Ransac', 'FGR'};
+originalPath = pwd;
+
+descriptorsNames = {'CliReg', 'CliRegMutual', 'TEASER3DMatch', 'RANSAC', 'FGR'};
 
 % Locations of evaluation files
 dataPath = '../../../../output/3DMatch/3DMatch';
@@ -24,6 +26,25 @@ sceneList = {'kitchen', ...
              'sun3d-hotel_umd-maryland_hotel3', ...
              'sun3d-mit_76_studyroom-76-1studyroom2', ...
              'sun3d-mit_lab_hj-lab_hj_tea_nov_2_2012_scan1_erika'};
+
+% For each scene in the datapath, execute the Python script to generate the auxiliary files with absolute paths
+for sceneIdx = 1:length(sceneList)
+    scenePath = fullfile(dataPath,sceneList{sceneIdx});
+    % Copy the Python script to the scene path
+    copyfile('process.py', scenePath);
+    % Copy the gt.log and gt.info files to the scene path
+    copyfile(fullfile('../../../../data/3DMatch/', sceneList{sceneIdx}, 'gt.log'), scenePath);
+    copyfile(fullfile('../../../../data/3DMatch/', sceneList{sceneIdx}, 'gt.info'), scenePath);
+    % Cd to the scene path
+    cd(scenePath);
+    for descriptorIdx = 1:length(descriptorsNames)
+        descriptorName = descriptorsNames{descriptorIdx};
+        system(['python3 process.py ' descriptorName '.log']);
+    end
+end
+
+% Go back to the original path
+cd(originalPath);
          
 % Load Elastic Reconstruction toolbox
 addpath(genpath('external'));
